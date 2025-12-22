@@ -3,7 +3,6 @@ use simple_rpt::camera::Camera;
 use simple_rpt::config::load_config;
 use simple_rpt::renderer::Renderer;
 use simple_rpt::shape::{Scene, sphere::Sphere};
-use std::path::PathBuf;
 
 fn main() {
     // Image
@@ -12,6 +11,7 @@ fn main() {
     let image_width = config.image_width();
     let image_height = config.image_height();
     let samples_per_pixel = config.samples_per_pixel;
+    let depth = config.depth;
 
     // Camera
     let viewport_height: f32 = 2.0;
@@ -32,12 +32,9 @@ fn main() {
             .unwrap()
             .progress_chars("=>-"),
     );
-    let r = Renderer::new(
-        cm,
-        scene,
-        Some(pb),
-        PathBuf::from(config.output_path()),
-        samples_per_pixel,
-    );
-    r.render(image_width, image_height);
+    let r = Renderer::new(cm, scene)
+        .width(image_width)
+        .height(image_height)
+        .progress_bar(pb);
+    r.render(image_width, image_height, samples_per_pixel, depth);
 }

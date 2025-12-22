@@ -9,13 +9,14 @@ pub struct Config {
     aspect_height: u32,
     image_width: u32,
     output_path: String,
-    
+
     pub samples_per_pixel: u32,
+    pub depth: u32,
 }
 
 impl Config {
-    pub fn aspect_ratio(&self) -> f64 {
-        self.aspect_width as f64 / self.aspect_height as f64
+    pub fn aspect_ratio(&self) -> f32 {
+        self.aspect_width as f32 / self.aspect_height as f32
     }
 
     pub fn image_width(&self) -> u32 {
@@ -23,7 +24,7 @@ impl Config {
     }
 
     pub fn image_height(&self) -> u32 {
-        (self.image_width as f64 / self.aspect_ratio()) as u32
+        (self.image_width as f32 / self.aspect_ratio()) as u32
     }
 
     pub fn output_path(&self) -> &Path {

@@ -1,5 +1,7 @@
 aspect_width = 16
 aspect_height = 9
 image_width = 400
-samples_per_pixel = 100
 output_path = "output/image.ppm"
+
+samples_per_pixel = 100
+depth = 50

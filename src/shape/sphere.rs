@@ -38,7 +38,7 @@ impl Hitable for Sphere {
         }
 
         rec.t = root;
-        rec.p = r.at(root);
+        rec.p = r.at(rec.t);
         let normal = (rec.p - self.center) / self.radius;
         rec.set_face_normal(r, normal);
 

@@ -1,13 +1,41 @@
+use crate::common::{random, random_range};
 use glam::Vec3A;
 
 /// Offer more friendly alias
 pub type Vec3 = Vec3A;
+
+pub trait Vec3Ext {
+    fn random() -> Vec3;
+    fn random_range(min: f32, max: f32) -> Vec3;
+    fn random_in_unit_sphere() -> Vec3;
+}
+
+impl Vec3Ext for Vec3 {
+    fn random() -> Vec3 {
+        Vec3::new(random(), random(), random())
+    }
+
+    fn random_range(min: f32, max: f32) -> Vec3 {
+        Vec3::new(
+            random_range(min, max),
+            random_range(min, max),
+            random_range(min, max),
+        )
+    }
+
+    fn random_in_unit_sphere() -> Vec3 {
+        Self::random_range(-1.0, 1.0).normalize()
+    }
+}
+
 pub type Point3 = Vec3A;
 pub type Color = Vec3A;
 
 /// Use rgb instead of xyz in type Color
 pub trait ColorExt {
     fn rgb(r: f32, g: f32, b: f32) -> Self;
+    fn black() -> Self;
+    fn white() -> Self;
     fn r(&self) -> f32;
     fn g(&self) -> f32;
     fn b(&self) -> f32;
@@ -16,7 +44,17 @@ pub trait ColorExt {
 impl ColorExt for Color {
     #[inline]
     fn rgb(r: f32, g: f32, b: f32) -> Self {
-        Vec3A::new(r, g, b)
+        Color::new(r, g, b)
+    }
+
+    #[inline]
+    fn black() -> Self {
+        Self::new(0.0, 0.0, 0.0)
+    }
+
+    #[inline]
+    fn white() -> Self {
+        Self::new(255.0, 255.0, 255.0)
     }
 
     #[inline]
