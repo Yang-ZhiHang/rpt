@@ -1,4 +1,8 @@
-use crate::math::{Point3, Ray, Vec3};
+use crate::{
+    material::Material,
+    math::{Point3, Ray, Vec3},
+};
+use std::sync::Arc;
 
 pub mod sphere;
 
@@ -10,19 +14,23 @@ pub struct HitRecord {
     /// Time
     pub t: f32,
 
-    /// Normal vector
+    /// The normal vector of the intersection surfaec towards the incident ray
     pub normal: Vec3,
 
     /// If the normal vector towards you
     pub front_face: bool,
+
+    /// The material of intersect object
+    pub material: Option<Arc<dyn Material>>,
 }
 
 impl HitRecord {
+    /// Create a intersection record in default
     pub fn new() -> Self {
         Default::default()
     }
 
-    /// Let normal vector face to the coming ray
+    /// Let normal vector face to the incident ray
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
         self.front_face = r.direction.dot(outward_normal) < 0.0;
         self.normal = if self.front_face {
@@ -33,52 +41,7 @@ impl HitRecord {
     }
 }
 
-pub trait Hitable: Send + Sync {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
-}
-
-#[derive(Default)]
-pub struct HittableList {
-    objects: Vec<Box<dyn Hitable>>,
-}
-
-pub type Scene = HittableList;
-
-impl HittableList {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    pub fn add<T>(&mut self, obj: T)
-    where
-        T: Hitable + 'static,
-    {
-        self.objects.push(Box::new(obj));
-    }
-
-    pub fn add_list<T, I>(&mut self, obj_list: I)
-    where
-        T: Hitable + 'static,
-        I: IntoIterator<Item = T>,
-    {
-        for obj in obj_list {
-            self.objects.push(Box::new(obj));
-        }
-    }
-}
-
-impl Hitable for HittableList {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
-        let mut obj_rec = HitRecord::new();
-        let mut hit_anything = false;
-        let mut closest_so_far = t_max;
-        for obj in &self.objects {
-            if obj.hit(r, t_min, closest_so_far, &mut obj_rec) {
-                hit_anything = true;
-                closest_so_far = obj_rec.t;
-                *rec = obj_rec.clone();
-            }
-        }
-        hit_anything
-    }
+pub trait Shape: Send + Sync {
+    /// Used for intersection informations of incident rays
+    fn intersect(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
 }

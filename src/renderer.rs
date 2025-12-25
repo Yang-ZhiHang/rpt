@@ -1,18 +1,17 @@
+use crate::camera::Camera;
+use crate::common::random;
+use crate::math::{Color, ColorExt, Ray};
+use crate::scene::Scene;
+use crate::shape::HitRecord;
+use indicatif::ProgressBar;
+use rayon::prelude::*;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 
-use indicatif::ProgressBar;
-use rayon::prelude::*;
-
-use crate::camera::Camera;
-use crate::common::random;
-use crate::math::{Color, ColorExt, Ray, Vec3, Vec3Ext};
-use crate::shape::{HitRecord, Hitable, Scene};
-
 pub struct Renderer {
     /// The camera to use
-    pub cm: Camera,
+    pub cam: Camera,
 
     /// The scene to render
     pub scene: Scene,
@@ -31,9 +30,9 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn new(cm: Camera, scene: Scene) -> Self {
+    pub fn new(cam: Camera, scene: Scene) -> Self {
         Self {
-            cm,
+            cam,
             scene,
             width: 800,
             height: 600,
@@ -66,26 +65,39 @@ impl Renderer {
         self
     }
 
-    pub fn sample(r: &Ray, s: &Scene, depth: u32, rec: &mut HitRecord) -> Color {
+    /// Trace the ray and return the color
+    pub fn trace_ray(r: &Ray, s: &Scene, depth: u32, rec: &mut HitRecord) -> Color {
         if depth <= 0 {
             return Color::black();
         }
-        if s.hit(r, 1e-5, f32::INFINITY, rec) {
-            let direction = rec.normal + Vec3::random_in_unit_sphere();
-            return 0.3 * Self::sample(&Ray::new(rec.p, direction), s, depth - 1, rec);
+        // t_min not set to zero to avoid shadow acne
+        if s.get_closest_intersect(r, 1e-5, f32::INFINITY, rec) {
+            let mut attenuation = Color::default();
+            let mut scatter = Ray::default();
+            if rec
+                .material
+                .as_ref()
+                .unwrap()
+                .scatter(r, rec, &mut attenuation, &mut scatter)
+            {
+                return attenuation * Self::trace_ray(&scatter, s, depth - 1, rec);
+            }
+            return Color::black();
         }
         let unit_direction = r.direction.normalize();
         let t: f32 = 0.5 * (unit_direction.y + 1.0);
         (1.0 - t) * Color::rgb(1.0, 1.0, 1.0) + t * Color::rgb(0.5, 0.7, 1.0)
     }
 
+    /// Write a color to specificated io
     pub fn write_color(io: &mut impl std::io::Write, color: &Color, samples_per_pixel: u32) {
         let mut r = color.r();
         let mut g = color.g();
         let mut b = color.b();
 
+        // Gamma-correct: Reduce the contrast in the bright areas and increase
+        // the contrast in the dark areas.
         let scale = 1.0 / samples_per_pixel as f32;
-        // sqrt for gamma-correct
         r = (r * scale).sqrt();
         g = (g * scale).sqrt();
         b = (b * scale).sqrt();
@@ -103,6 +115,7 @@ impl Renderer {
         .expect("Failed to write color");
     }
 
+    /// Render the image for given scene
     pub fn render(&self, image_width: u32, image_height: u32, samples_per_pixel: u32, depth: u32) {
         let file = File::create(&self.output_path).expect("Create image file failed.");
         let mut writer = BufWriter::with_capacity(1024 * 1024, file);
@@ -122,12 +135,13 @@ impl Renderer {
                         for _ in 0..samples_per_pixel {
                             let u = (col as f32 + random()) / (image_width - 1) as f32;
                             let v = (row as f32 + random()) / (image_height - 1) as f32;
-                            let r = self.cm.get_ray(u, v);
-                            pixel_color += Self::sample(&r, &self.scene, depth, &mut rec);
+                            let r = self.cam.get_ray(u, v);
+                            pixel_color += Self::trace_ray(&r, &self.scene, depth, &mut rec);
                         }
                         pixel_color
                     })
                     .collect();
+
                 // Update progress bar after finish each row
                 self.pb.as_ref().map(|pb| pb.inc(1));
                 row_pixels

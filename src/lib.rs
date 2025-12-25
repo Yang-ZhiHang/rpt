@@ -1,6 +1,9 @@
 pub mod camera;
 pub mod common;
 pub mod config;
+pub mod material;
 pub mod math;
+pub mod object;
 pub mod renderer;
+pub mod scene;
 pub mod shape;
