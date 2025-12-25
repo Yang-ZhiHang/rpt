@@ -6,9 +6,22 @@ use std::f32::EPSILON;
 pub type Vec3 = Vec3A;
 
 pub trait Vec3Ext {
+    /// Generate a random vector with each component in [0, 1)
     fn random() -> Vec3;
+
+    /// Generate a random vector with each component in [min, max)
     fn random_range(min: f32, max: f32) -> Vec3;
+
+    /// Randomly Generate a vector in a unit sphere which length <= 1.0
     fn random_in_unit_sphere() -> Vec3;
+
+    /// Randomly Generate a vector on the surface of a unit sphere which length == 1.0
+    fn random_in_unit_sphere_surface() -> Vec3;
+
+    /// Randomly Generate a vector in a unit disk which length <= 1.0
+    fn random_in_unit_disk() -> Vec3;
+
+    /// Check if the vector is close to zero in length
     fn near_zero(&self) -> bool;
 }
 
@@ -29,7 +42,27 @@ impl Vec3Ext for Vec3 {
 
     #[inline]
     fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let p = Self::random_range(-1.0, 1.0);
+            if p.length_squared() < 1.0 {
+                return p;
+            }
+        }
+    }
+
+    #[inline]
+    fn random_in_unit_sphere_surface() -> Vec3 {
         Self::random_range(-1.0, 1.0).normalize()
+    }
+
+    #[inline]
+    fn random_in_unit_disk() -> Vec3 {
+        loop {
+            let p = Vec3::new(random_range(-1.0, 1.0), random_range(-1.0, 1.0), 0.0);
+            if p.length_squared() < 1.0 {
+                return p;
+            }
+        }
     }
 
     #[inline]

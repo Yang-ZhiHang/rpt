@@ -1,7 +1,10 @@
+[image]
+width = 400
+# 16:9 aspect ratio
 aspect_width = 16
 aspect_height = 9
-image_width = 400
 output_path = "output/image.ppm"
 
+[render]
 samples_per_pixel = 100
-depth = 50
+max_depth = 50

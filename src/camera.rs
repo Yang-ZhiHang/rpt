@@ -1,12 +1,8 @@
-use crate::math::{Point3, Ray, Vec3};
+use crate::math::{Point3, Ray, Vec3, Vec3Ext};
 
 pub struct Camera {
     /// The original point of camera
     pub origin: Point3,
-
-    /// The length of focal which refers to the distance from origin
-    /// in the reverse direction of axis z
-    pub focal_length: f32,
 
     /// Width of viewport
     pub horizontal: Vec3,
@@ -16,35 +12,55 @@ pub struct Camera {
 
     /// The bottom left corner of viewport which centered on the origin
     pub lower_left: Point3,
+
+    pub u: Vec3,
+    pub v: Vec3,
+    pub lens_radius: f32,
 }
 
 impl Camera {
     pub fn new(
-        origin: [f32; 3],
+        look_from: Point3,
+        look_at: Point3,
+        vup: Vec3, // View up vector
+        vfov: f32, // Vertical field-of-view in degrees
+        aspect_ratio: f32,
+        aperture: f32,
         focal_length: f32,
-        viewport_height: f32,
-        viewport_width: f32,
     ) -> Self {
-        let origin = Point3::from_array(origin);
-        let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-        let vertical = Vec3::new(0.0, viewport_height, 0.0);
+        let theta = vfov.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h;
+        let viewport_width = viewport_height * aspect_ratio;
+
+        // Pixel coordinates
+        let w: Vec3 = (look_from - look_at).normalize();
+        let u: Vec3 = vup.cross(w).normalize();
+        let v: Vec3 = w.cross(u);
+
+        let horizontal: Vec3 = viewport_width * u;
+        let vertical: Vec3 = viewport_height * v;
+        let lower_left: Point3 = look_from - horizontal / 2.0 - vertical / 2.0 - w * focal_length;
+        let lens_radius = aperture / 2.0;
+
         Self {
-            origin,
-            focal_length,
+            origin: look_from,
             horizontal,
             vertical,
-            lower_left: origin
-                - horizontal / 2.0
-                - vertical / 2.0
-                - Point3::new(0.0, 0.0, focal_length),
+            lower_left,
+            u,
+            v,
+            lens_radius,
         }
     }
 
-    /// Returns a ray start from origin according to u, v which ranged in [0, 1].
+    /// Obtain the ray direction of the pixel coordinate uv from the aperture
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
+        let r = self.lens_radius * Vec3::random_in_unit_disk();
+        let offset = self.u * r.x + self.v * r.y;
         Ray::new(
-            self.origin,
-            self.lower_left + u * self.horizontal + v * self.vertical - self.origin,
+            self.origin + offset,
+            self.lower_left + u * self.horizontal + v * self.vertical - self.origin - offset,
         )
     }
 }
