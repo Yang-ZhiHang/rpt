@@ -1,5 +1,6 @@
-use crate::common::{random, random_range};
+use crate::common::random;
 use glam::Vec3A;
+use rand::random_range;
 use std::f32::EPSILON;
 
 /// Offer more friendly alias
@@ -16,7 +17,7 @@ pub trait Vec3Ext {
     fn random_in_unit_sphere() -> Vec3;
 
     /// Randomly Generate a vector on the surface of a unit sphere which length == 1.0
-    fn random_in_unit_sphere_surface() -> Vec3;
+    fn random_unit_vector() -> Vec3;
 
     /// Randomly Generate a vector in a unit disk which length <= 1.0
     fn random_in_unit_disk() -> Vec3;
@@ -34,9 +35,9 @@ impl Vec3Ext for Vec3 {
     #[inline]
     fn random_range(min: f32, max: f32) -> Vec3 {
         Vec3::new(
-            random_range(min, max),
-            random_range(min, max),
-            random_range(min, max),
+            random_range(min..max),
+            random_range(min..max),
+            random_range(min..max),
         )
     }
 
@@ -51,14 +52,15 @@ impl Vec3Ext for Vec3 {
     }
 
     #[inline]
-    fn random_in_unit_sphere_surface() -> Vec3 {
-        Self::random_range(-1.0, 1.0).normalize()
+    fn random_unit_vector() -> Vec3 {
+        // Self::random_range(-1.0, 1.0).normalize()
+        Self::random_in_unit_sphere().normalize()
     }
 
     #[inline]
     fn random_in_unit_disk() -> Vec3 {
         loop {
-            let p = Vec3::new(random_range(-1.0, 1.0), random_range(-1.0, 1.0), 0.0);
+            let p = Vec3::new(random_range(-1.0..1.0), random_range(-1.0..1.0), 0.0);
             if p.length_squared() < 1.0 {
                 return p;
             }

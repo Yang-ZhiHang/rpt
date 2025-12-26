@@ -38,8 +38,8 @@ impl Camera {
         let u: Vec3 = vup.cross(w).normalize();
         let v: Vec3 = w.cross(u);
 
-        let horizontal: Vec3 = viewport_width * u;
-        let vertical: Vec3 = viewport_height * v;
+        let horizontal: Vec3 = focal_length * viewport_width * u;
+        let vertical: Vec3 = focal_length * viewport_height * v;
         let lower_left: Point3 = look_from - horizontal / 2.0 - vertical / 2.0 - w * focal_length;
         let lens_radius = aperture / 2.0;
 

@@ -29,7 +29,7 @@ impl Material for Lambertian {
         scatter: &mut Ray,
     ) -> bool {
         *attenuation = self.albedo;
-        *scatter = Ray::new(rec.p, rec.normal + Vec3::random_in_unit_sphere());
+        *scatter = Ray::new(rec.p, rec.normal + Vec3::random_unit_vector());
         true
     }
 }

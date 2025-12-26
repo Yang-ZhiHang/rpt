@@ -133,7 +133,7 @@ fn default_width() -> u32 {
 }
 
 fn default_output_path() -> String {
-    "output/image.ppm".to_string()
+    "outputs/image.ppm".to_string()
 }
 
 fn default_samples_per_pixel() -> u32 {
