@@ -49,7 +49,8 @@ impl Shape for Sphere {
 
         rec.t = root;
         rec.p = r.at(rec.t);
-        // normalized normal vector
+        // If radius is negative, the normal is inverted
+        // Application: hollow glass sphere
         let normal = (rec.p - self.center) / self.radius;
         rec.set_face_normal(r, normal);
 
@@ -57,7 +58,9 @@ impl Shape for Sphere {
     }
 
     fn bounding_box(&self) -> Aabb {
-        let radius_vec = Point3::splat(self.radius);
+        // Use absolute radius so negative-radius shells still produce a valid box
+        let r = self.radius.abs();
+        let radius_vec = Point3::splat(r);
         Aabb::new(self.center - radius_vec, self.center + radius_vec)
     }
 }

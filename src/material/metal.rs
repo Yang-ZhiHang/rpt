@@ -3,6 +3,7 @@ use crate::{
     math::{Color, Ray, Vec3, Vec3Ext},
 };
 
+#[derive(Clone, Copy)]
 pub struct Metal {
     /// The reflectivity to different colors
     pub albedo: Color,

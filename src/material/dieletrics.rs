@@ -2,8 +2,10 @@ use crate::{
     common::random,
     material::Material,
     math::{Color, Ray, Vec3},
+    shape::HitRecord,
 };
 
+#[derive(Clone, Copy)]
 pub struct Dielectric {
     pub indices_of_refraction: f32,
 }
@@ -19,10 +21,10 @@ impl Dielectric {
 impl Material for Dielectric {
     fn scatter(
         &self,
-        r_in: &crate::math::Ray,
-        rec: &crate::shape::HitRecord,
-        attenuation: &mut crate::math::Color,
-        scatter: &mut crate::math::Ray,
+        r_in: &Ray,
+        rec: &HitRecord,
+        attenuation: &mut Color,
+        scatter: &mut Ray,
     ) -> bool {
         let ir = if rec.front_face {
             1.0 / self.indices_of_refraction

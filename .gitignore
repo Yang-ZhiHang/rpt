@@ -1,3 +1,7 @@
 /target
-/output
+
+# Images
+/outputs
 *.ppm
+*.jpg
+*.png
