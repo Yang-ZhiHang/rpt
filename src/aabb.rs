@@ -32,18 +32,10 @@ impl Aabb {
 
     /// Create surrounding box that contains two AABBs.
     pub fn surrounding_box(a: &Aabb, b: &Aabb) -> Aabb {
-        let x_min = a.x.min.min(b.x.min);
-        let y_min = a.y.min.min(b.y.min);
-        let z_min = a.z.min.min(b.z.min);
-        let x_max = a.x.max.max(b.x.max);
-        let y_max = a.y.max.max(b.y.max);
-        let z_max = a.z.max.max(b.z.max);
-        let x = Interval::new(x_min, x_max);
-        let y = Interval::new(y_min, y_max);
-        let z = Interval::new(z_min, z_max);
-        Aabb::new(x, y, z)
+        Aabb::new(a.x.union(&b.x), a.y.union(&b.y), a.z.union(&b.z))
     }
 
+    /// Return the axis-specified interval according to the index.
     pub fn axis_interval(&self, axis_index: usize) -> Interval {
         match axis_index {
             0 => self.x,
@@ -76,13 +68,13 @@ impl Aabb {
     pub fn padding_to_minimal(mut self) -> Self {
         let delta = 0.001;
         if self.x.size() < delta {
-            self.x.expand(delta);
+            self.x.extend(delta);
         }
         if self.y.size() < delta {
-            self.y.expand(delta);
+            self.y.extend(delta);
         }
         if self.z.size() < delta {
-            self.z.expand(delta);
+            self.z.extend(delta);
         }
         self
     }

@@ -2,7 +2,6 @@ pub mod aabb;
 pub mod bvh;
 pub mod camera;
 pub mod common;
-pub mod config;
 pub mod interval;
 pub mod material;
 pub mod math;

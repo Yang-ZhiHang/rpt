@@ -1,21 +1,28 @@
 use crate::{
-    math::{Color, Ray},
+    math::{Color, ColorExt, Point3, Ray},
     shape::HitRecord,
 };
 
 pub mod dieletrics;
 pub mod lambertian;
+pub mod light;
 pub mod metal;
 
 pub trait Material: Send + Sync {
     /// Get the attenuation color and scattered ray to be able to compute the scattered color
     fn scatter(
         &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scatter: &mut Ray,
-    ) -> bool;
+        _r_in: &Ray,
+        _rec: &HitRecord,
+        _attenuation: &mut Color,
+        _scatter: &mut Ray,
+    ) -> bool {
+        false
+    }
+
+    fn illustrate(&self, _u: f32, _v: f32, _p: Point3) -> Color {
+        Color::black()
+    }
 
     /// Use Schlick's approximation for reflectance
     fn reflectance(&self, cosine: f32, ref_idx: f32) -> f32 {

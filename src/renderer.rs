@@ -68,27 +68,35 @@ impl Renderer {
     }
 
     /// Trace the ray and return the color
-    pub fn trace_ray(r: &Ray, s: &dyn Hittable, depth: u32, rec: &mut HitRecord) -> Color {
+    pub fn trace_ray(&self, r: &Ray, s: &dyn Hittable, depth: u32, rec: &mut HitRecord) -> Color {
         if depth <= 0 {
             return Color::black();
         }
+
         // Start ray interval above zero to avoid shadow acne
-        if s.intersect(r, Interval::new(1e-3, f32::INFINITY), rec) {
-            let mut attenuation = Color::default();
-            let mut scatter = Ray::default();
-            if rec
-                .material
-                .as_ref()
-                .unwrap()
-                .scatter(r, rec, &mut attenuation, &mut scatter)
-            {
-                return attenuation * Self::trace_ray(&scatter, s, depth - 1, rec);
-            }
-            return Color::black();
+        if !s.intersect(r, Interval::new(1e-3, f32::INFINITY), rec) {
+            return self.scene.background;
         }
-        let unit_direction = r.direction.normalize();
-        let t: f32 = 0.5 * (unit_direction.y + 1.0);
-        (1.0 - t) * Color::rgb(1.0, 1.0, 1.0) + t * Color::rgb(0.5, 0.7, 1.0)
+
+        let mut attenuation = Color::default();
+        let mut scatter = Ray::default();
+        let illustrate_color = rec
+            .material
+            .as_ref()
+            .unwrap()
+            .illustrate(rec.u, rec.v, rec.p);
+
+        // The material could use `unwrap` instead of `map_or` because it will not be `None` if 
+        // s.intersect is true.
+        if !rec
+            .material
+            .as_ref()
+            .unwrap()
+            .scatter(r, rec, &mut attenuation, &mut scatter)
+        {
+            return illustrate_color;
+        }
+        return illustrate_color + attenuation * self.trace_ray(&scatter, s, depth - 1, rec);
     }
 
     /// Write a color to specificated io
@@ -138,7 +146,7 @@ impl Renderer {
                             let u = (col as f32 + random()) / (image_width - 1) as f32;
                             let v = (row as f32 + random()) / (image_height - 1) as f32;
                             let r = self.cam.get_ray(u, v);
-                            pixel_color += Self::trace_ray(&r, &self.scene, depth, &mut rec);
+                            pixel_color += self.trace_ray(&r, &self.scene, depth, &mut rec);
                         }
                         pixel_color
                     })

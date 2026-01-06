@@ -2,6 +2,7 @@
 /target
 
 # Images
+/assets
 /outputs
 *.ppm
 *.jpg

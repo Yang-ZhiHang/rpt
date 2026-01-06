@@ -1,4 +1,5 @@
 use crate::interval::Interval;
+use crate::math::Color;
 use crate::shape::Hittable;
 use crate::{bvh::BvhNode, math::Ray, object::Object, shape::HitRecord};
 
@@ -9,6 +10,9 @@ pub struct Scene {
 
     /// The BVH for the scene.
     bvh: Option<BvhNode>,
+
+    /// The background color of the scene
+    pub background: Color,
 }
 
 impl Scene {

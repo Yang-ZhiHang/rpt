@@ -13,17 +13,17 @@ pub struct Lambertian {
 }
 
 impl Lambertian {
-    /// Create a lambertian material from albedo
-    pub fn new(albedo: Color) -> Self {
-        Self {
-            tex: Arc::new(SolidColor::new(albedo)),
-        }
-    }
-
     /// Create a default lambertian material with gray albedo
     pub fn default() -> Self {
         Self {
             tex: Arc::new(SolidColor::new(Color::splat(0.5))),
+        }
+    }
+
+    /// Create a lambertian material from albedo
+    pub fn new(albedo: Color) -> Self {
+        Self {
+            tex: Arc::new(SolidColor::new(albedo)),
         }
     }
 
