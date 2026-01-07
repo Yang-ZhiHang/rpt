@@ -1,4 +1,4 @@
-use glam::Vec3A;
+use glam::{Mat4, Vec3A, Vec4Swizzles};
 use rand::random_range;
 use std::f32::EPSILON;
 
@@ -79,6 +79,10 @@ pub type Color = Vec3A;
 pub trait ColorExt {
     fn rgb(r: f32, g: f32, b: f32) -> Self;
     fn black() -> Self;
+    fn white() -> Self;
+    fn red() -> Self;
+    fn green() -> Self;
+    fn blue() -> Self;
     fn r(&self) -> f32;
     fn g(&self) -> f32;
     fn b(&self) -> f32;
@@ -93,6 +97,26 @@ impl ColorExt for Color {
     #[inline]
     fn black() -> Self {
         Self::ZERO
+    }
+
+    #[inline]
+    fn white() -> Self {
+        Self::new(1.0, 1.0, 1.0)
+    }
+
+    #[inline]
+    fn red() -> Self {
+        Self::new(0.65, 0.05, 0.05)
+    }
+
+    #[inline]
+    fn green() -> Self {
+        Self::new(0.12, 0.45, 0.15)
+    }
+
+    #[inline]
+    fn blue() -> Self {
+        Self::new(0.08, 0.08, 0.55)
     }
 
     #[inline]
@@ -140,5 +164,16 @@ impl Ray {
     /// Get the point along the ray at time t.
     pub fn at(&self, t: f32) -> Point3 {
         self.origin + t * self.direction
+    }
+
+    pub fn apply_transform(&self, trans: &Mat4) -> Ray {
+        let origin = trans.mul_vec4(self.origin.extend(1.0));
+        // Direction no need to translate
+        let direction = trans.mul_vec4(self.direction.extend(0.0));
+        Ray {
+            origin: origin.xyz().to_vec3a(),
+            direction: direction.xyz().to_vec3a(),
+            t: self.t,
+        }
     }
 }

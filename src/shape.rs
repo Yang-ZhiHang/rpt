@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use glam::{Mat3A, Mat4, Vec4, Vec4Swizzles};
+
 use crate::{
     aabb::Aabb,
     interval::Interval,
@@ -7,8 +9,19 @@ use crate::{
     math::{Point3, Ray, Vec3},
 };
 
+pub mod cube;
 pub mod quad;
 pub mod sphere;
+
+pub trait Hittable: Send + Sync {
+    /// Used for HitRecord of incident ray.
+    fn intersect(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
+}
+
+pub trait Bounded: Hittable {
+    /// The bounding box of the shape.
+    fn bbox(&self) -> Aabb;
+}
 
 #[derive(Default, Clone)]
 pub struct HitRecord {
@@ -20,11 +33,11 @@ pub struct HitRecord {
     /// the `Ray` structure.
     pub t: f32,
 
-    /// The 3d coordinations of the normal vector in the intersection surfaec towards 
+    /// The 3d coordinations of the normal vector in the intersection surface towards
     /// the incident ray.
     pub normal: Vec3,
 
-    /// The flag to determine whether the normal vector towards you. e.g. if the radius is 
+    /// The flag to determine whether the normal vector towards you. e.g. if the radius is
     /// negative, then the normal vector is inverted.
     pub front_face: bool,
 
@@ -53,12 +66,136 @@ impl HitRecord {
     }
 }
 
-pub trait Hittable: Send + Sync {
-    /// Used for HitRecord of incident ray.
-    fn intersect(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
+/// A Object that has been composed with a transformation.
+pub struct Transformed<T> {
+    /// The hittable shape that need to transforme.
+    shape: T,
+
+    /// The transformation matrix to transform object.
+    transform: Mat4,
+
+    #[allow(dead_code)]
+    /// The transformation which extract from `transform` and not contains translate part.
+    linear: Mat3A,
+
+    /// The inverse of `transform` which use to transform the incident ray.
+    inverse_transform: Mat4,
+
+    /// The inverse and transpose of `transform` which use to rectify normal vector.
+    normal_transform: Mat3A,
 }
 
-pub trait Bounded: Hittable {
-    /// The bounding box of the shape.
-    fn bbox(&self) -> Aabb;
+impl<T> Transformed<T> {
+    pub fn new(shape: T, transform: Mat4) -> Self {
+        let linear = Mat3A::from_mat4(transform);
+        let inverse_transform = transform.inverse();
+        let normal_transform = linear.inverse().transpose();
+        Self {
+            shape,
+            transform,
+            linear,
+            inverse_transform,
+            normal_transform,
+        }
+    }
+}
+
+impl<T: Hittable> Hittable for Transformed<T> {
+    fn intersect(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
+        let ray_trans = r.apply_transform(&self.inverse_transform);
+        if !self.shape.intersect(&ray_trans, ray_t, rec) {
+            return false;
+        }
+        
+        // Transform intersection point back to world space
+        let p_world = self.transform * rec.p.extend(1.0);
+        rec.p = p_world.xyz().to_vec3a();
+
+        // Fix normal vector by multiplying by M^-T
+        rec.normal = self.normal_transform.mul_vec3a(rec.normal).normalize();
+
+        // Check face normal against the original ray (not transformed ray)
+        rec.set_face_normal(r, rec.normal);
+        true
+    }
+}
+
+impl<T: Bounded> Bounded for Transformed<T> {
+    fn bbox(&self) -> Aabb {
+        let Aabb { x, y, z } = self.shape.bbox();
+
+        // Transform all 8 corners and find min/max
+        let corners = [
+            (x.min, y.min, z.min),
+            (x.min, y.min, z.max),
+            (x.min, y.max, z.min),
+            (x.min, y.max, z.max),
+            (x.max, y.min, z.min),
+            (x.max, y.min, z.max),
+            (x.max, y.max, z.min),
+            (x.max, y.max, z.max),
+        ];
+
+        let transformed: Vec<_> = corners
+            .iter()
+            .map(|&(x, y, z)| {
+                let p = (self.transform * Vec4::new(x, y, z, 1.0)).xyz();
+                (p.x, p.y, p.z)
+            })
+            .collect();
+
+        let min_x = transformed
+            .iter()
+            .map(|p| p.0)
+            .fold(f32::INFINITY, f32::min);
+        let max_x = transformed
+            .iter()
+            .map(|p| p.0)
+            .fold(f32::NEG_INFINITY, f32::max);
+        let min_y = transformed
+            .iter()
+            .map(|p| p.1)
+            .fold(f32::INFINITY, f32::min);
+        let max_y = transformed
+            .iter()
+            .map(|p| p.1)
+            .fold(f32::NEG_INFINITY, f32::max);
+        let min_z = transformed
+            .iter()
+            .map(|p| p.2)
+            .fold(f32::INFINITY, f32::min);
+        let max_z = transformed
+            .iter()
+            .map(|p| p.2)
+            .fold(f32::NEG_INFINITY, f32::max);
+
+        Aabb {
+            x: Interval::new(min_x, max_x),
+            y: Interval::new(min_y, max_y),
+            z: Interval::new(min_z, max_z),
+        }
+    }
+}
+
+pub trait Transformable<T> {
+    /// Translate the shape from vector.
+    fn translate(self, v: Vec3) -> Transformed<T>;
+
+    /// Rotate the shape from a specified angle in radians
+    fn rotate(self, axis: Vec3, angle: f32) -> Transformed<T>;
+
+    /// Rotate the shape in y-axis from a specified angle in radians
+    fn rotate_y(self, angle: f32) -> Transformed<T>;
+}
+
+impl<T: Hittable> Transformable<T> for T {
+    fn translate(self, v: Vec3) -> Transformed<T> {
+        Transformed::new(self, Mat4::from_translation(v.into()))
+    }
+    fn rotate(self, axis: Vec3, angle: f32) -> Transformed<T> {
+        Transformed::new(self, Mat4::from_axis_angle(axis.into(), angle))
+    }
+    fn rotate_y(self, angle: f32) -> Transformed<T> {
+        Transformed::new(self, Mat4::from_rotation_y(angle))
+    }
 }

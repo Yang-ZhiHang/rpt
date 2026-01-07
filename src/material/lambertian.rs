@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::material::Material;
-use crate::math::{Color, Ray, Vec3, Vec3Ext};
+use crate::math::{Color, ColorExt, Ray, Vec3, Vec3Ext};
 use crate::shape::HitRecord;
 use crate::texture::Texture;
 use crate::texture::solid_color::SolidColor;
@@ -12,14 +12,16 @@ pub struct Lambertian {
     pub tex: Arc<dyn Texture>,
 }
 
-impl Lambertian {
+impl Default for Lambertian {
     /// Create a default lambertian material with gray albedo
-    pub fn default() -> Self {
+    fn default() -> Self {
         Self {
-            tex: Arc::new(SolidColor::new(Color::splat(0.5))),
+            tex: Arc::new(SolidColor::new(Color::white())),
         }
     }
+}
 
+impl Lambertian {
     /// Create a lambertian material from albedo
     pub fn new(albedo: Color) -> Self {
         Self {

@@ -5,7 +5,7 @@ use crate::{
     math::{Point3, Ray},
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 /// Axis-Aligned Bounding Box.
 pub struct Aabb {
     // pub min: Point3,
@@ -47,6 +47,8 @@ impl Aabb {
     /// Check if ray intersects with AABB.
     pub fn intersect(&self, r: &Ray, ray_t: Interval) -> bool {
         let mut bounds = ray_t;
+
+        // Check intersection with three pairs of planes
         for axis in 0..3 {
             let interval = self.axis_interval(axis);
             let inv_d = 1.0 / r.direction[axis];

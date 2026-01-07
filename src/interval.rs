@@ -1,4 +1,4 @@
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct Interval {
     /// The minimal value of a interval.
     pub min: f32,

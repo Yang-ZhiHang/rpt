@@ -1,15 +1,19 @@
 # Complie
-/target
+target
 
 # Images
-/assets
-/outputs
+assets
+outputs
 *.ppm
 *.jpg
 *.png
 
+# Configs
+.zed
+.vscode
+
 # Examples
-/examples
+examples
 
 # TODOs
 TODO.md
