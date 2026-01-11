@@ -16,10 +16,10 @@ pub trait Vec3Ext {
     /// Randomly Generate a vector in a unit sphere which length <= 1.0
     fn random_in_unit_sphere() -> Vec3;
 
-    /// Randomly Generate a vector on the surface of a unit sphere which length == 1.0
+    /// Randomly Generate a vector on the surface of a unit sphere which length equals to 1.0
     fn random_unit_vector() -> Vec3;
 
-    /// Randomly Generate a vector in a unit disk which length <= 1.0
+    /// Randomly Generate a vector in a unit disk which length not greater than 1.0
     fn random_in_unit_disk() -> Vec3;
 
     /// Check if the vector is close to zero in length
@@ -116,7 +116,7 @@ impl ColorExt for Color {
 
     #[inline]
     fn blue() -> Self {
-        Self::new(0.08, 0.08, 0.55)
+        Self::new(0.2, 0.4, 0.9)
     }
 
     #[inline]

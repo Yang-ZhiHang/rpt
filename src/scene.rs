@@ -21,20 +21,9 @@ impl Scene {
         Default::default()
     }
 
-    /// Add a Object to Scene.
-    pub fn add(&mut self, obj: Object) -> &mut Self {
-        self.objects.push(obj);
-        self.bvh = None;
-        self
-    }
-
-    /// Add a list of Object to Scene.
-    pub fn add_list<I>(&mut self, obj_list: I) -> &mut Self
-    where
-        I: IntoIterator<Item = Object>,
-    {
-        self.objects.extend(obj_list);
-        self.bvh = None;
+    /// Set the background of the scene.
+    pub fn background(mut self, color: Color) -> Self {
+        self.background = color;
         self
     }
 
@@ -47,6 +36,23 @@ impl Scene {
 
     /// Builder-style add_list that consumes and returns the Scene.
     pub fn with_list<I>(mut self, obj_list: I) -> Self
+    where
+        I: IntoIterator<Item = Object>,
+    {
+        self.objects.extend(obj_list);
+        self.bvh = None;
+        self
+    }
+
+    /// Add a Object to Scene.
+    pub fn add(&mut self, obj: Object) -> &mut Self {
+        self.objects.push(obj);
+        self.bvh = None;
+        self
+    }
+
+    /// Add a list of Object to Scene.
+    pub fn add_list<I>(&mut self, obj_list: I) -> &mut Self
     where
         I: IntoIterator<Item = Object>,
     {

@@ -4,6 +4,7 @@ use crate::{
 };
 
 pub mod dieletrics;
+pub mod isotropic;
 pub mod lambertian;
 pub mod light;
 pub mod metal;

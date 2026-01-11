@@ -8,12 +8,12 @@ use crate::texture::solid_color::SolidColor;
 
 #[derive(Clone)]
 pub struct Lambertian {
-    /// The texture representing the albedo of the material
+    /// The texture of the material.
     pub tex: Arc<dyn Texture>,
 }
 
 impl Default for Lambertian {
-    /// Create a default lambertian material with gray albedo
+    /// Create a default lambertian material with gray albedo.
     fn default() -> Self {
         Self {
             tex: Arc::new(SolidColor::new(Color::white())),
@@ -22,14 +22,14 @@ impl Default for Lambertian {
 }
 
 impl Lambertian {
-    /// Create a lambertian material from albedo
+    /// Create a lambertian material from albedo.
     pub fn new(albedo: Color) -> Self {
         Self {
             tex: Arc::new(SolidColor::new(albedo)),
         }
     }
 
-    /// Create a lambertian material from texture
+    /// Create a lambertian material from texture.
     pub fn from_texture<T>(tex: T) -> Self
     where
         T: Texture + 'static,
@@ -46,8 +46,14 @@ impl Material for Lambertian {
         attenuation: &mut Color,
         scatter: &mut Ray,
     ) -> bool {
+        let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
+
+        if scatter_direction.near_zero() {
+            scatter_direction = rec.normal;
+        }
+
         *attenuation = self.tex.sample(rec.u, rec.v, rec.normal);
-        *scatter = Ray::new(rec.p, rec.normal + Vec3::random_unit_vector(), r_in.t);
+        *scatter = Ray::new(rec.p, scatter_direction, r_in.t);
         true
     }
 }

@@ -1,12 +1,15 @@
+use std::sync::Arc;
+
 use crate::{
     material::Material,
     math::{Color, Ray, Vec3, Vec3Ext},
+    texture::{Texture, solid_color::SolidColor},
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Metal {
-    /// The reflectivity to different colors
-    pub albedo: Color,
+    /// The texture of the material.
+    pub tex: Arc<dyn Texture>,
 
     /// The fuzziness of the reflected rays
     pub fuzz: f32,
@@ -14,10 +17,21 @@ pub struct Metal {
 
 impl Metal {
     /// Create a metal material from albedo and fuzz
-    pub fn new(albedo: Color, fuzz: f32) -> Self {
+    pub fn new(color: Color, fuzz: f32) -> Self {
         Self {
-            albedo,
+            tex: Arc::new(SolidColor::new(color)),
             fuzz: fuzz.clamp(0.0, 1.0),
+        }
+    }
+
+    /// Create a metal material from texture.
+    pub fn from_texture<T>(tex: T, fuzz: f32) -> Self
+    where
+        T: Texture + 'static,
+    {
+        Self {
+            tex: Arc::new(tex),
+            fuzz,
         }
     }
 }
@@ -32,17 +46,12 @@ impl Material for Metal {
     ) -> bool {
         let mut reflect_direction: Vec3 = r_in.direction.reflect(rec.normal);
 
-        // Avoid zero vector
-        if reflect_direction.near_zero() {
-            reflect_direction = rec.normal;
-        }
+        // Remember to normalize the `reflect_direction` or else `fuzz` will loss
+        // it function.
+        reflect_direction = reflect_direction.normalize() + self.fuzz * Vec3::random_unit_vector();
 
-        *attenuation = self.albedo;
-        *scatter = Ray::new(
-            rec.p,
-            reflect_direction + self.fuzz * Vec3::random_unit_vector(),
-            r_in.t,
-        );
+        *attenuation = self.tex.sample(rec.u, rec.v, rec.p);
+        *scatter = Ray::new(rec.p, reflect_direction, r_in.t);
 
         // After we add fuzz, we need to ensure the scattered ray is still
         // in outer side of the surface of sphere

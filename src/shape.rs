@@ -9,6 +9,7 @@ use crate::{
     math::{Point3, Ray, Vec3},
 };
 
+pub mod constant_medium;
 pub mod cube;
 pub mod quad;
 pub mod sphere;
@@ -106,7 +107,7 @@ impl<T: Hittable> Hittable for Transformed<T> {
         if !self.shape.intersect(&ray_trans, ray_t, rec) {
             return false;
         }
-        
+
         // Transform intersection point back to world space
         let p_world = self.transform * rec.p.extend(1.0);
         rec.p = p_world.xyz().to_vec3a();

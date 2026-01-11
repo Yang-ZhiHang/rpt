@@ -1,3 +1,5 @@
+use std::f32;
+
 #[derive(Clone, Copy, Default)]
 pub struct Interval {
     /// The minimal value of a interval.
@@ -13,6 +15,14 @@ impl Interval {
         let min = if a < b { a } else { b };
         let max = if a > b { a } else { b };
         Self { min, max }
+    }
+
+    /// Create an infinitely large interval.
+    pub fn universe() -> Self {
+        Self {
+            min: f32::NEG_INFINITY,
+            max: f32::INFINITY,
+        }
     }
 
     /// Return the length of the interval.
