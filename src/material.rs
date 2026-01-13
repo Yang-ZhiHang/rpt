@@ -1,6 +1,5 @@
 use crate::{
-    math::{Color, ColorExt, Point3, Ray},
-    shape::HitRecord,
+    color::{self, Color}, math::{ Point3, Ray}, shape::HitRecord
 };
 
 pub mod dieletrics;
@@ -22,7 +21,7 @@ pub trait Material: Send + Sync {
     }
 
     fn illustrate(&self, _u: f32, _v: f32, _p: Point3) -> Color {
-        Color::black()
+        color::BLACK
     }
 
     /// Use Schlick's approximation for reflectance

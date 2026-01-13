@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use crate::{
-    math::{Color, Point3},
+    color::Color,
+    math::Point3,
     texture::{Texture, solid_color::SolidColor},
 };
 

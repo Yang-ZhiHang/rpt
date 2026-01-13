@@ -3,7 +3,8 @@ use std::path::Path;
 use image::{DynamicImage, ImageReader};
 use palette::{LinSrgb, Srgb};
 
-use crate::math::{Color, Vec3};
+use crate::color::Color;
+use crate::math::Vec3;
 use crate::texture::Texture;
 
 pub struct ImageTexture {

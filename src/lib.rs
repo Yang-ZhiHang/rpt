@@ -1,6 +1,8 @@
 pub mod aabb;
+pub mod buffer;
 pub mod bvh;
 pub mod camera;
+pub mod color;
 pub mod common;
 pub mod interval;
 pub mod material;

@@ -1,7 +1,4 @@
-use crate::{
-    math::{Color, Point3},
-    texture::Texture,
-};
+use crate::{color::Color, math::Point3, texture::Texture};
 
 pub struct SolidColor {
     albedo: Color,

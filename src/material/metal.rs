@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use crate::{
+    color::Color,
     material::Material,
-    math::{Color, Ray, Vec3, Vec3Ext},
+    math::{Ray, Vec3, vec3::random_unit_vector},
     texture::{Texture, solid_color::SolidColor},
 };
 
@@ -48,7 +49,7 @@ impl Material for Metal {
 
         // Remember to normalize the `reflect_direction` or else `fuzz` will loss
         // it function.
-        reflect_direction = reflect_direction.normalize() + self.fuzz * Vec3::random_unit_vector();
+        reflect_direction = reflect_direction.normalize() + self.fuzz * random_unit_vector();
 
         *attenuation = self.tex.sample(rec.u, rec.v, rec.p);
         *scatter = Ray::new(rec.p, reflect_direction, r_in.t);

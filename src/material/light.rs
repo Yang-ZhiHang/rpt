@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use crate::{
+    color::{self, Color},
     material::Material,
-    math::{Color, ColorExt, Point3},
+    math::Point3,
     texture::{Texture, solid_color::SolidColor},
 };
 
@@ -15,7 +16,7 @@ impl Light {
     /// Create a default light material in white light.
     pub fn default() -> Self {
         Self {
-            tex: Arc::new(SolidColor::new(Color::white())),
+            tex: Arc::new(SolidColor::new(color::WHITE)),
         }
     }
 

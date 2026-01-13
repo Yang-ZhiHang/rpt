@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use crate::{
+    color::{self, Color},
     common::random,
     material::Material,
-    math::{Color, ColorExt, Ray, Vec3},
+    math::{Ray, Vec3},
     shape::HitRecord,
     texture::{Texture, solid_color::SolidColor},
 };
@@ -21,7 +22,7 @@ impl Default for Dielectric {
     fn default() -> Self {
         Self {
             index_of_refraction: 1.5,
-            tex: Arc::new(SolidColor::new(Color::white())),
+            tex: Arc::new(SolidColor::new(color::WHITE)),
         }
     }
 }

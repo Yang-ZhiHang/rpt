@@ -28,7 +28,8 @@ impl Sphere {
         let radius_vec = Point3::splat(r);
         let (center_direction, aabb) = match center_to {
             Some(ct) => {
-                let box_from = Aabb::from_points(center_from - radius_vec, center_from + radius_vec);
+                let box_from =
+                    Aabb::from_points(center_from - radius_vec, center_from + radius_vec);
                 let box_to = Aabb::from_points(ct - radius_vec, ct + radius_vec);
                 (ct - center_from, Aabb::surrounding_box(&box_from, &box_to))
             }
@@ -44,6 +45,7 @@ impl Sphere {
         }
     }
 
+    /// Transform 3D sphere coordinates into plane coordinates using polar angle and azimuth angle.
     pub fn get_sphere_uv(p: Point3) -> (f32, f32) {
         // Normalize to make UV mapping independent of radius length
         let p = p.normalize();

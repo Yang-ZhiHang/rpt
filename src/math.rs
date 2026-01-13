@@ -1,39 +1,25 @@
 use glam::{Mat4, Vec3A, Vec4Swizzles};
-use rand::random_range;
 use std::f32::EPSILON;
 
 use crate::common::random;
 
 pub type Vec3 = Vec3A;
+pub type Point3 = Vec3A;
 
-pub trait Vec3Ext {
+/// Vector utilities module for Vec3 operations
+pub mod vec3 {
+    use super::*;
+    use rand::random_range;
+
     /// Generate a random vector with each component in [0, 1)
-    fn random() -> Vec3;
-
-    /// Generate a random vector with each component in [min, max)
-    fn random_range(min: f32, max: f32) -> Vec3;
-
-    /// Randomly Generate a vector in a unit sphere which length <= 1.0
-    fn random_in_unit_sphere() -> Vec3;
-
-    /// Randomly Generate a vector on the surface of a unit sphere which length equals to 1.0
-    fn random_unit_vector() -> Vec3;
-
-    /// Randomly Generate a vector in a unit disk which length not greater than 1.0
-    fn random_in_unit_disk() -> Vec3;
-
-    /// Check if the vector is close to zero in length
-    fn near_zero(&self) -> bool;
-}
-
-impl Vec3Ext for Vec3 {
     #[inline]
-    fn random() -> Vec3 {
-        Vec3::new(random(), random(), random())
+    pub fn random() -> Vec3 {
+        Vec3::new(super::random(), super::random(), super::random())
     }
 
+    /// Generate a random vector with each component in [min, max)
     #[inline]
-    fn random_range(min: f32, max: f32) -> Vec3 {
+    pub fn random_in_range(min: f32, max: f32) -> Vec3 {
         Vec3::new(
             random_range(min..max),
             random_range(min..max),
@@ -41,23 +27,26 @@ impl Vec3Ext for Vec3 {
         )
     }
 
+    /// Randomly generate a vector in a unit sphere (length <= 1.0)
     #[inline]
-    fn random_in_unit_sphere() -> Vec3 {
+    pub fn random_in_unit_sphere() -> Vec3 {
         loop {
-            let p = Self::random_range(-1.0, 1.0);
+            let p = random_in_range(-1.0, 1.0);
             if p.length_squared() < 1.0 {
                 return p;
             }
         }
     }
 
+    /// Randomly generate a vector on the surface of a unit sphere (length == 1.0)
     #[inline]
-    fn random_unit_vector() -> Vec3 {
-        Self::random_in_unit_sphere().normalize()
+    pub fn random_unit_vector() -> Vec3 {
+        random_in_unit_sphere().normalize()
     }
 
+    /// Randomly generate a vector in a unit disk (length <= 1.0, z=0)
     #[inline]
-    fn random_in_unit_disk() -> Vec3 {
+    pub fn random_in_unit_disk() -> Vec3 {
         loop {
             let p = Vec3::new(random_range(-1.0..1.0), random_range(-1.0..1.0), 0.0);
             if p.length_squared() < 1.0 {
@@ -65,73 +54,17 @@ impl Vec3Ext for Vec3 {
             }
         }
     }
+}
 
+pub trait Vec3Ext {
+    /// Check if the vector is close to zero in length
+    fn near_zero(&self) -> bool;
+}
+
+impl Vec3Ext for Vec3 {
     #[inline]
     fn near_zero(&self) -> bool {
         self.length_squared() < EPSILON
-    }
-}
-
-pub type Point3 = Vec3A;
-pub type Color = Vec3A;
-
-/// Use rgb instead of xyz in type Color
-pub trait ColorExt {
-    fn rgb(r: f32, g: f32, b: f32) -> Self;
-    fn black() -> Self;
-    fn white() -> Self;
-    fn red() -> Self;
-    fn green() -> Self;
-    fn blue() -> Self;
-    fn r(&self) -> f32;
-    fn g(&self) -> f32;
-    fn b(&self) -> f32;
-}
-
-impl ColorExt for Color {
-    #[inline]
-    fn rgb(r: f32, g: f32, b: f32) -> Self {
-        Self::new(r, g, b)
-    }
-
-    #[inline]
-    fn black() -> Self {
-        Self::ZERO
-    }
-
-    #[inline]
-    fn white() -> Self {
-        Self::new(1.0, 1.0, 1.0)
-    }
-
-    #[inline]
-    fn red() -> Self {
-        Self::new(0.65, 0.05, 0.05)
-    }
-
-    #[inline]
-    fn green() -> Self {
-        Self::new(0.12, 0.45, 0.15)
-    }
-
-    #[inline]
-    fn blue() -> Self {
-        Self::new(0.2, 0.4, 0.9)
-    }
-
-    #[inline]
-    fn r(&self) -> f32 {
-        self.x
-    }
-
-    #[inline]
-    fn g(&self) -> f32 {
-        self.y
-    }
-
-    #[inline]
-    fn b(&self) -> f32 {
-        self.z
     }
 }
 

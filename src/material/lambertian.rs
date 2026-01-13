@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
+use crate::color::{self, Color};
 use crate::material::Material;
-use crate::math::{Color, ColorExt, Ray, Vec3, Vec3Ext};
+use crate::math::vec3::random_unit_vector;
+use crate::math::{Ray, Vec3Ext};
 use crate::shape::HitRecord;
 use crate::texture::Texture;
 use crate::texture::solid_color::SolidColor;
@@ -16,7 +18,7 @@ impl Default for Lambertian {
     /// Create a default lambertian material with gray albedo.
     fn default() -> Self {
         Self {
-            tex: Arc::new(SolidColor::new(Color::white())),
+            tex: Arc::new(SolidColor::new(color::WHITE)),
         }
     }
 }
@@ -46,7 +48,7 @@ impl Material for Lambertian {
         attenuation: &mut Color,
         scatter: &mut Ray,
     ) -> bool {
-        let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
+        let mut scatter_direction = rec.normal + random_unit_vector();
 
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;

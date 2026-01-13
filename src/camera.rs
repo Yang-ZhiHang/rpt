@@ -1,6 +1,6 @@
 use crate::{
     common::random,
-    math::{Point3, Ray, Vec3, Vec3Ext},
+    math::{Point3, Ray, Vec3, vec3::random_in_unit_disk},
 };
 
 pub struct Camera {
@@ -62,7 +62,7 @@ impl Camera {
 
     /// Obtain the ray of the pixel coordinate (u, v) from the aperture.
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
-        let mut lens_offset = self.lens_radius * Vec3::random_in_unit_disk();
+        let mut lens_offset = self.lens_radius * random_in_unit_disk();
         lens_offset = self.u * lens_offset.x + self.v * lens_offset.y;
         let shutter_time = random();
         Ray::new(

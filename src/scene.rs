@@ -1,5 +1,5 @@
+use crate::color::Color;
 use crate::interval::Interval;
-use crate::math::Color;
 use crate::shape::Hittable;
 use crate::{bvh::BvhNode, math::Ray, object::Object, shape::HitRecord};
 

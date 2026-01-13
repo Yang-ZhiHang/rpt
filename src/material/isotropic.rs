@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use crate::{
+    color::{self, Color},
     material::Material,
-    math::{Color, ColorExt, Ray, Vec3, Vec3Ext},
+    math::{Ray, vec3::random_unit_vector},
     texture::{Texture, solid_color::SolidColor},
 };
 
@@ -16,7 +17,7 @@ impl Default for Isotropic {
     /// Create a default isotropic material with gray albedo
     fn default() -> Self {
         Self {
-            tex: Arc::new(SolidColor::new(Color::white())),
+            tex: Arc::new(SolidColor::new(color::WHITE)),
         }
     }
 }
@@ -47,7 +48,7 @@ impl Material for Isotropic {
         scatter: &mut Ray,
     ) -> bool {
         *attenuation = self.tex.sample(rec.u, rec.v, rec.p);
-        *scatter = Ray::new(rec.p, Vec3::random_unit_vector(), r_in.t);
+        *scatter = Ray::new(rec.p, random_unit_vector(), r_in.t);
         true
     }
 }
