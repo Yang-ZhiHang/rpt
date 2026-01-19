@@ -16,7 +16,7 @@ pub struct Buffer {
 
 impl Buffer {
     /// Create a empty buffer with width and height.
-    pub fn new(width: u32, height: u32) -> Self {
+    pub const fn new(width: u32, height: u32) -> Self {
         Self {
             width,
             height,

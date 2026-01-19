@@ -5,7 +5,7 @@ pub struct SolidColor {
 }
 
 impl SolidColor {
-    pub fn new(albedo: Color) -> Self {
+    pub const fn new(albedo: Color) -> Self {
         Self { albedo }
     }
 }

@@ -15,7 +15,7 @@ pub mod quad;
 pub mod sphere;
 
 pub trait Hittable: Send + Sync {
-    /// Used for HitRecord of incident ray.
+    /// Used for `HitRecord` of incident ray.
     fn intersect(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
 }
 
@@ -51,14 +51,9 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
-    /// Create a intersection record in default.
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     /// Set the normal vector of intersections surface which face to the incident ray.
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
-        self.front_face = r.direction.dot(outward_normal) < 0.0;
+        self.front_face = r.dir.dot(outward_normal) < 0.0;
         self.normal = if self.front_face {
             outward_normal
         } else {

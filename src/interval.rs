@@ -18,7 +18,7 @@ impl Interval {
     }
 
     /// Create an infinitely large interval.
-    pub fn universe() -> Self {
+    pub const fn universe() -> Self {
         Self {
             min: f32::NEG_INFINITY,
             max: f32::INFINITY,
@@ -32,8 +32,8 @@ impl Interval {
 
     /// Extend both the left and right sides of the interval outward by `delta`.
     pub fn extend(&mut self, delta: f32) {
-        self.min = self.min - delta;
-        self.max = self.max + delta;
+        self.min -= delta;
+        self.max += delta;
     }
 
     /// Determine if the interval contains specified value.
@@ -42,7 +42,7 @@ impl Interval {
     }
 
     /// Return the smallest interval that contains both `self` and `other`.
-    pub fn union(&self, other: &Interval) -> Interval {
-        Interval::new(self.min.min(other.min), self.max.max(other.max))
+    pub fn union(&self, other: &Self) -> Self {
+        Self::new(self.min.min(other.min), self.max.max(other.max))
     }
 }

@@ -8,12 +8,10 @@ outputs
 *.jpg
 *.png
 
-# Configs
-.zed
-.vscode
-
 # Examples
 examples
 
-# TODOs
+# Others
 TODO.md
+justfile
+Cargo.lock

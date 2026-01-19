@@ -19,7 +19,7 @@ pub struct Object {
 
 impl Object {
     /// Create a Object from shape with default lambertian material
-    pub fn new<T>(shape: T) -> Object
+    pub fn new<T>(shape: T) -> Self
     where
         T: Bounded + 'static,
     {
@@ -30,7 +30,7 @@ impl Object {
     }
 
     /// Set material for object
-    pub fn material<T>(mut self, material: T) -> Object
+    pub fn material<T>(mut self, material: T) -> Self
     where
         T: Material + 'static,
     {

@@ -26,19 +26,21 @@ impl Sphere {
         // Use absolute radius so negative-radius spheres still produce a valid box
         let r = radius.abs();
         let radius_vec = Point3::splat(r);
-        let (center_direction, aabb) = match center_to {
-            Some(ct) => {
+        let (center_direction, aabb) = center_to.map_or_else(
+            || {
+                (
+                    Vec3::ZERO,
+                    Aabb::from_points(center_from - radius_vec, center_from + radius_vec),
+                )
+            },
+            |ct| {
                 let box_from =
                     Aabb::from_points(center_from - radius_vec, center_from + radius_vec);
                 let box_to = Aabb::from_points(ct - radius_vec, ct + radius_vec);
                 (ct - center_from, Aabb::surrounding_box(&box_from, &box_to))
-            }
-            None => (
-                Vec3::ZERO,
-                Aabb::from_points(center_from - radius_vec, center_from + radius_vec),
-            ),
-        };
-        Sphere {
+            },
+        );
+        Self {
             center: Ray::new(center_from, center_direction, 0.0),
             radius,
             aabb,
@@ -59,21 +61,20 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn intersect(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
-        // oc = A - C
         let current_center = self.center.at(r.t);
-        let oc = r.origin - current_center;
-        let a = r.direction.length_squared();
-        let h = r.direction.dot(oc);
-        let c = oc.length_squared() - self.radius * self.radius;
-        let discriminant = h * h - a * c;
-        if discriminant < 0.0 {
+        let oc = r.ori - current_center;
+        let a = r.dir.length_squared();
+        let frac_b_2 = r.dir.dot(oc);
+        let c = self.radius.mul_add(-self.radius, oc.length_squared());
+        let discriminant = frac_b_2.mul_add(frac_b_2, -a * c);
+        if discriminant.is_sign_negative() {
             return false;
         }
 
         let sqrt_d = discriminant.sqrt();
-        let mut root = (-h - sqrt_d) / a; // Find the nearest root, start with (-b-sqrt_d)
+        let mut root = (-frac_b_2 - sqrt_d) / a; // Find the nearest root
         if !ray_t.contains(root) {
-            root = (-h + sqrt_d) / a;
+            root = (-frac_b_2 + sqrt_d) / a;
             if !ray_t.contains(root) {
                 return false;
             }

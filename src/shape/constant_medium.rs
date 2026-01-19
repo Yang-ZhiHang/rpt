@@ -28,8 +28,8 @@ impl ConstantMedium {
 
 impl Hittable for ConstantMedium {
     fn intersect(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
-        let mut rec1 = HitRecord::new();
-        let mut rec2 = HitRecord::new();
+        let mut rec1 = HitRecord::default();
+        let mut rec2 = HitRecord::default();
 
         if !self.boundary.intersect(r, Interval::universe(), &mut rec1) {
             return false;
@@ -57,7 +57,7 @@ impl Hittable for ConstantMedium {
             rec1.t = 0.0;
         }
 
-        let ray_length = r.direction.length();
+        let ray_length = r.dir.length();
         let distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
         let hit_distance = self.neg_inv_density * random().ln();
 

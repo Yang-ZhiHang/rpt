@@ -8,16 +8,19 @@ use crate::{
 #[derive(Clone, Copy, Default)]
 /// Axis-Aligned Bounding Box.
 pub struct Aabb {
-    // pub min: Point3,
-    // pub max: Point3,
+    /// The interval in x axis.
     pub x: Interval,
+
+    /// The interval in y axis.
     pub y: Interval,
+
+    /// The interval in z axis.
     pub z: Interval,
 }
 
 impl Aabb {
     /// Create AABB based on the xyz of the `Interval` structure.
-    pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
+    pub const fn new(x: Interval, y: Interval, z: Interval) -> Self {
         Self { x, y, z }
     }
 
@@ -31,12 +34,12 @@ impl Aabb {
     }
 
     /// Create surrounding box that contains two AABBs.
-    pub fn surrounding_box(a: &Aabb, b: &Aabb) -> Aabb {
-        Aabb::new(a.x.union(&b.x), a.y.union(&b.y), a.z.union(&b.z))
+    pub fn surrounding_box(a: &Self, b: &Self) -> Self {
+        Self::new(a.x.union(&b.x), a.y.union(&b.y), a.z.union(&b.z))
     }
 
     /// Return the axis-specified interval according to the index.
-    pub fn axis_interval(&self, axis_index: usize) -> Interval {
+    pub const fn axis_interval(&self, axis_index: usize) -> Interval {
         match axis_index {
             0 => self.x,
             1 => self.y,
@@ -51,9 +54,9 @@ impl Aabb {
         // Check intersection with three pairs of planes
         for axis in 0..3 {
             let interval = self.axis_interval(axis);
-            let inv_d = 1.0 / r.direction[axis];
-            let mut t0 = (interval.min - r.origin[axis]) * inv_d;
-            let mut t1 = (interval.max - r.origin[axis]) * inv_d;
+            let inv_d = 1.0 / r.dir[axis];
+            let mut t0 = (interval.min - r.ori[axis]) * inv_d;
+            let mut t1 = (interval.max - r.ori[axis]) * inv_d;
             if inv_d < 0.0 {
                 swap(&mut t0, &mut t1);
             }
@@ -68,7 +71,7 @@ impl Aabb {
 
     /// Ensure no side is narrower than delta, padding if necessary
     pub fn padding_to_minimal(mut self) -> Self {
-        let delta = 0.001;
+        let delta = 1e-3;
         if self.x.size() < delta {
             self.x.extend(delta);
         }

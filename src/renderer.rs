@@ -36,7 +36,7 @@ pub struct Renderer {
 
 impl Renderer {
     /// Create a renderer from camera and scene.
-    pub fn new(cam: Camera, scene: Scene) -> Self {
+    pub const fn new(cam: Camera, scene: Scene) -> Self {
         Self {
             cam,
             scene,
@@ -49,13 +49,13 @@ impl Renderer {
     }
 
     /// Set the width of output image.
-    pub fn width(mut self, width: u32) -> Self {
+    pub const fn width(mut self, width: u32) -> Self {
         self.width = width;
         self
     }
 
     /// Set the height of output image.
-    pub fn height(mut self, height: u32) -> Self {
+    pub const fn height(mut self, height: u32) -> Self {
         self.height = height;
         self
     }
@@ -67,31 +67,25 @@ impl Renderer {
     }
 
     /// Set number of samplings for one pixel.
-    pub fn num_samples(mut self, n: u32) -> Self {
+    pub const fn num_samples(mut self, n: u32) -> Self {
         self.num_samples = n;
         self
     }
 
     /// Set maximum number of the light bounces for renderer.
-    pub fn max_bounces(mut self, n: u32) -> Self {
+    pub const fn max_bounces(mut self, n: u32) -> Self {
         self.max_bounces = n;
         self
     }
 
     /// Trace the ray and return the color.
-    pub fn trace_ray(
-        &self,
-        ray: &Ray,
-        scene: &dyn Hittable,
-        num_bounces: u32,
-        rec: &mut HitRecord,
-    ) -> Color {
-        if num_bounces <= 0 {
+    pub fn trace_ray(&self, ray: &Ray, num_bounces: u32, rec: &mut HitRecord) -> Color {
+        if num_bounces == 0 {
             return color::BLACK;
         }
 
         // Start ray interval above zero to avoid shadow acne.
-        if !scene.intersect(ray, Interval::new(1e-3, f32::INFINITY), rec) {
+        if !self.intersect(ray, Interval::new(1e-3, f32::INFINITY), rec) {
             return self.scene.background;
         }
 
@@ -113,19 +107,18 @@ impl Renderer {
         {
             return illustrate_color;
         }
-        return illustrate_color
-            + attenuation * self.trace_ray(&scatter, scene, num_bounces - 1, rec);
+        illustrate_color + attenuation * self.trace_ray(&scatter, num_bounces - 1, rec)
     }
 
     /// Get the pixel color of a specified location in film plane.
     pub fn get_color(&self, col: u32, row: u32, iterations: u32) -> Color {
         let mut pixel_color = Color::default();
-        let mut rec = HitRecord::new();
+        let mut rec = HitRecord::default();
         for _ in 0..iterations {
             let u = (col as f32 + random()) / (self.width - 1) as f32;
             let v = (row as f32 + random()) / (self.height - 1) as f32;
             let r = self.cam.get_ray(u, v);
-            pixel_color += self.trace_ray(&r, &self.scene, self.max_bounces, &mut rec);
+            pixel_color += self.trace_ray(&r, self.max_bounces, &mut rec);
         }
         pixel_color / iterations as f32
     }
@@ -141,12 +134,16 @@ impl Renderer {
                     .collect();
 
                 // Update progress bar after finish each row
-                self.pb.as_ref().map(|pb| pb.inc(1));
+                if let Some(pb) = self.pb.as_ref() {
+                    pb.inc(1);
+                }
                 row_pixels
             })
             .collect();
         buffer.extend(colors);
-        self.pb.as_ref().map(|pb| pb.finish_with_message("Done!"));
+        if let Some(pb) = self.pb.as_ref() {
+            pb.finish_with_message("Done!");
+        }
     }
 
     /// Render the image for given scene and return `RgbImage`.
@@ -154,5 +151,26 @@ impl Renderer {
         let mut buffer = Buffer::new(self.width, self.height);
         self.sample(self.num_samples, &mut buffer);
         buffer.image()
+    }
+}
+
+impl Hittable for Renderer {
+    /// Get closest intersection of ray with intersectable objects.
+    fn intersect(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
+        if let Some(bvh) = &self.scene.bvh {
+            return bvh.intersect(r, ray_t, rec);
+        }
+        let mut obj_rec = HitRecord::default();
+        let mut hit_any = false;
+        let mut closest_so_far = ray_t.max;
+        for obj in &self.scene.objects {
+            let search_interval = Interval::new(ray_t.min, closest_so_far);
+            if obj.intersect(r, search_interval, &mut obj_rec) {
+                hit_any = true;
+                closest_so_far = obj_rec.t;
+                *rec = obj_rec.clone();
+            }
+        }
+        hit_any
     }
 }

@@ -12,7 +12,7 @@ use crate::{
 #[derive(Clone)]
 pub struct Dielectric {
     /// The index of refraction of the dielectric material.
-    pub index_of_refraction: f32,
+    pub index: f32,
 
     /// The texture of the material.
     pub tex: Arc<dyn Texture>,
@@ -21,7 +21,7 @@ pub struct Dielectric {
 impl Default for Dielectric {
     fn default() -> Self {
         Self {
-            index_of_refraction: 1.5,
+            index: 1.5,
             tex: Arc::new(SolidColor::new(color::WHITE)),
         }
     }
@@ -31,7 +31,7 @@ impl Dielectric {
     /// Create a dielectric material from index of refraction and color.
     pub fn new(index_of_refraction: f32, color: Color) -> Self {
         Self {
-            index_of_refraction,
+            index: index_of_refraction,
             tex: Arc::new(SolidColor::new(color)),
         }
     }
@@ -42,7 +42,7 @@ impl Dielectric {
         T: Texture + 'static,
     {
         Self {
-            index_of_refraction,
+            index: index_of_refraction,
             tex: Arc::new(tex),
         }
     }
@@ -56,27 +56,25 @@ impl Material for Dielectric {
         attenuation: &mut Color,
         scatter: &mut Ray,
     ) -> bool {
-        let ir = if rec.front_face {
-            1.0 / self.index_of_refraction
+        let eta = if rec.front_face {
+            1.0 / self.index
         } else {
-            self.index_of_refraction
+            self.index
         };
-        let unit_direction = r_in.direction.normalize();
+        let unit_direction = r_in.dir.normalize();
 
         // Ensure the incident ray has refract ray
         let cos_theta = -unit_direction.dot(rec.normal).min(1.0);
-        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
-        let refractable = ir * sin_theta < 1.0;
+        let sin_theta = (cos_theta.mul_add(-cos_theta, 1.0)).sqrt();
+        let refractable = eta * sin_theta < 1.0;
 
-        // The smaller the cosine, the larger the incident angle, and
-        // the more reflection component the human eye sees
-        let direction: Vec3 = if refractable
-            && Self::reflectance(&self, cos_theta, self.index_of_refraction) <= random()
-        {
-            unit_direction.refract(rec.normal, ir)
-        } else {
-            unit_direction.reflect(rec.normal)
-        };
+        // The larger the incident angle, and the more reflection component the human eye sees
+        let direction: Vec3 =
+            if refractable && Self::reflectance(self, cos_theta, self.index) <= random() {
+                unit_direction.refract(rec.normal, eta)
+            } else {
+                unit_direction.reflect(rec.normal)
+            };
 
         *attenuation = self.tex.sample(rec.u, rec.v, rec.p);
         *scatter = Ray::new(rec.p, direction, rec.t);

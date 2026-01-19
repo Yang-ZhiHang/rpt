@@ -1,5 +1,5 @@
 use glam::{Mat4, Vec3A, Vec4Swizzles};
-use std::f32::EPSILON;
+use std::f32;
 
 use crate::common::random;
 
@@ -64,48 +64,49 @@ pub trait Vec3Ext {
 impl Vec3Ext for Vec3 {
     #[inline]
     fn near_zero(&self) -> bool {
-        self.length_squared() < EPSILON
+        self.length_squared() < f32::EPSILON
     }
 }
 
 #[derive(Default)]
-/// A ray can be represented as: A + t*B where A is origin, B is direction, and t is a scalar
-/// that indicates how long the ray has traveled. For any given value of t, we can compute the
-/// point along the ray using the `at` method below.
+/// A ray can be represented as: `A + t*B` where `A` is origin, `B` is direction, and `t` is a scalar.
+/// For any given value of t, we can compute the point along the ray using the `at` method below.
 pub struct Ray {
     /// The origin coordinate of ray
-    pub origin: Point3,
+    pub ori: Point3,
 
-    /// The direction vector of ray
-    pub direction: Vec3,
+    /// The normalized direction vector of ray
+    pub dir: Vec3,
 
-    /// The time to define the position of moving objects. It can be understood as the ray
-    /// entering the camera at time t.
+    /// The macro time to define the position of moving objects.
+    /// It can be understood as the ray entering the camera at shutter time `t`.
+    /// We use macro time `t` in `Ray` to distinguish different ray and micro time `t` in `HitRecord`
+    /// to distinguish different point in the same ray.
     pub t: f32,
 }
 
 impl Ray {
     /// Create a ray from origin, direction and time
-    pub fn new(origin: Point3, direction: Vec3, time: f32) -> Self {
-        Ray {
-            origin,
-            direction,
+    pub const fn new(origin: Point3, direction: Vec3, time: f32) -> Self {
+        Self {
+            ori: origin,
+            dir: direction,
             t: time,
         }
     }
 
-    /// Get the point along the ray at time t.
+    /// Get the point along the ray at micro time t.
     pub fn at(&self, t: f32) -> Point3 {
-        self.origin + t * self.direction
+        self.ori + t * self.dir
     }
 
-    pub fn apply_transform(&self, trans: &Mat4) -> Ray {
-        let origin = trans.mul_vec4(self.origin.extend(1.0));
+    pub fn apply_transform(&self, trans: &Mat4) -> Self {
+        let origin = trans.mul_vec4(self.ori.extend(1.0));
         // Direction no need to translate
-        let direction = trans.mul_vec4(self.direction.extend(0.0));
-        Ray {
-            origin: origin.xyz().to_vec3a(),
-            direction: direction.xyz().to_vec3a(),
+        let direction = trans.mul_vec4(self.dir.extend(0.0));
+        Self {
+            ori: origin.xyz().to_vec3a(),
+            dir: direction.xyz().to_vec3a(),
             t: self.t,
         }
     }

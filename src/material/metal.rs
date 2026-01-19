@@ -45,17 +45,15 @@ impl Material for Metal {
         attenuation: &mut Color,
         scatter: &mut Ray,
     ) -> bool {
-        let mut reflect_direction: Vec3 = r_in.direction.reflect(rec.normal);
+        let mut reflect_direction: Vec3 = r_in.dir.reflect(rec.normal);
 
-        // Remember to normalize the `reflect_direction` or else `fuzz` will loss
-        // it function.
+        // Normalize the `reflect_direction` or the direction change brought by `fuzz` will be very small.
         reflect_direction = reflect_direction.normalize() + self.fuzz * random_unit_vector();
 
         *attenuation = self.tex.sample(rec.u, rec.v, rec.p);
         *scatter = Ray::new(rec.p, reflect_direction, r_in.t);
 
-        // After we add fuzz, we need to ensure the scattered ray is still
-        // in outer side of the surface of sphere
-        scatter.direction.dot(rec.normal) > 0.0
+        // After we add fuzz, we need to ensure the scattered ray is still in outer side of the surface of sphere
+        scatter.dir.dot(rec.normal) > 0.0
     }
 }

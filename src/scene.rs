@@ -1,15 +1,13 @@
 use crate::color::Color;
-use crate::interval::Interval;
-use crate::shape::Hittable;
-use crate::{bvh::BvhNode, math::Ray, object::Object, shape::HitRecord};
+use crate::{bvh::BvhNode, object::Object};
 
 #[derive(Default)]
 pub struct Scene {
     /// The list of objects in the scene.
-    objects: Vec<Object>,
+    pub objects: Vec<Object>,
 
     /// The BVH for the scene.
-    bvh: Option<BvhNode>,
+    pub bvh: Option<BvhNode>,
 
     /// The background color of the scene
     pub background: Color,
@@ -22,7 +20,7 @@ impl Scene {
     }
 
     /// Set the background of the scene.
-    pub fn background(mut self, color: Color) -> Self {
+    pub const fn background(mut self, color: Color) -> Self {
         self.background = color;
         self
     }
@@ -62,7 +60,7 @@ impl Scene {
     }
 
     /// Consume the builder and return the Scene.
-    pub fn build(self) -> Self {
+    pub const fn build(self) -> Self {
         self
     }
 
@@ -73,26 +71,5 @@ impl Scene {
             return;
         }
         self.bvh = Some(BvhNode::build(self.objects.clone()));
-    }
-}
-
-impl Hittable for Scene {
-    /// Get closest intersection of ray with intersectable objects.
-    fn intersect(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
-        if let Some(bvh) = &self.bvh {
-            return bvh.intersect(r, ray_t, rec);
-        }
-        let mut obj_rec = HitRecord::new();
-        let mut hit_any = false;
-        let mut closest_so_far = ray_t.max;
-        for obj in &self.objects {
-            let search_interval = Interval::new(ray_t.min, closest_so_far);
-            if obj.intersect(r, search_interval, &mut obj_rec) {
-                hit_any = true;
-                closest_so_far = obj_rec.t;
-                *rec = obj_rec.clone();
-            }
-        }
-        hit_any
     }
 }

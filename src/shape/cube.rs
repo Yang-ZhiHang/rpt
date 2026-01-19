@@ -35,9 +35,9 @@ impl Hittable for Cube {
 
         // Check intersection with three pairs of planes
         for axis in 0..3 {
-            let inv_d = 1.0 / r.direction[axis];
-            let t0 = (self.p_min[axis] - r.origin[axis]) * inv_d;
-            let t1 = (self.p_max[axis] - r.origin[axis]) * inv_d;
+            let inv_d = 1.0 / r.dir[axis];
+            let t0 = (self.p_min[axis] - r.ori[axis]) * inv_d;
+            let t1 = (self.p_max[axis] - r.ori[axis]) * inv_d;
 
             let (t0, t1) = if inv_d < 0.0 { (t1, t0) } else { (t0, t1) };
 

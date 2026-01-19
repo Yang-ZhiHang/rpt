@@ -12,14 +12,16 @@ pub struct Light {
     pub tex: Arc<dyn Texture>,
 }
 
-impl Light {
+impl Default for Light {
     /// Create a default light material in white light.
-    pub fn default() -> Self {
+    fn default() -> Self {
         Self {
             tex: Arc::new(SolidColor::new(color::WHITE)),
         }
     }
+}
 
+impl Light {
     /// Create a light material from color.
     pub fn new(color: Color) -> Self {
         Self {

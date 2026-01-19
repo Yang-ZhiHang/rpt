@@ -1,4 +1,4 @@
-use std::f32::EPSILON;
+use std::f32;
 
 use crate::{
     aabb::Aabb,
@@ -67,15 +67,15 @@ impl Quad {
 
 impl Hittable for Quad {
     fn intersect(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
-        let denominator = self.normal.dot(r.direction);
+        let denominator = self.normal.dot(r.dir);
 
         // Treat near-parallel rays as misses
-        if denominator.abs() < EPSILON {
+        if denominator.abs() < f32::EPSILON {
             return false;
         }
 
         // Solve for the intersection parameter t
-        let root = (self.D - self.normal.dot(r.origin)) / denominator;
+        let root = (self.D - self.normal.dot(r.ori)) / denominator;
         if !ray_t.contains(root) {
             return false;
         }

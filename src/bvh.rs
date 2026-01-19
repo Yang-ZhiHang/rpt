@@ -75,14 +75,14 @@ impl BvhNode {
             1 => {
                 let obj = objects[0].clone();
                 let bbox = obj.bbox();
-                BvhNode::Leaf { object: obj, bbox }
+                Self::Leaf { object: obj, bbox }
             }
             2 => {
                 let (left_objs, right_objs) = objects.split_at_mut(1);
                 let left_node = Box::new(Self::build_from_slice(left_objs));
                 let right_node = Box::new(Self::build_from_slice(right_objs));
                 let bbox = Aabb::surrounding_box(&left_node.bbox(), &right_node.bbox());
-                BvhNode::Node {
+                Self::Node {
                     left: left_node,
                     right: right_node,
                     bbox,
@@ -94,7 +94,7 @@ impl BvhNode {
                 let left_node = Box::new(Self::build_from_slice(left_objs));
                 let right_node = Box::new(Self::build_from_slice(right_objs));
                 let bbox = Aabb::surrounding_box(&left_node.bbox(), &right_node.bbox());
-                BvhNode::Node {
+                Self::Node {
                     left: left_node,
                     right: right_node,
                     bbox,
@@ -107,18 +107,18 @@ impl BvhNode {
 impl Hittable for BvhNode {
     fn intersect(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
         match self {
-            BvhNode::Leaf { object, bbox } => {
+            Self::Leaf { object, bbox } => {
                 if bbox.intersect(r, ray_t) && object.intersect(r, ray_t, rec) {
                     return true;
                 }
                 false
             }
-            BvhNode::Node { left, right, bbox } => {
+            Self::Node { left, right, bbox } => {
                 if !bbox.intersect(r, ray_t) {
                     return false;
                 }
                 let mut hit_any = false;
-                let mut temp_rec = HitRecord::new();
+                let mut temp_rec = HitRecord::default();
                 let mut search_interval = ray_t;
 
                 if left.intersect(r, search_interval, &mut temp_rec) {
@@ -140,8 +140,8 @@ impl Bounded for BvhNode {
     /// Get bounding box of this node.
     fn bbox(&self) -> Aabb {
         match self {
-            BvhNode::Leaf { bbox, .. } => *bbox,
-            BvhNode::Node { bbox, .. } => *bbox,
+            Self::Leaf { bbox, .. } => *bbox,
+            Self::Node { bbox, .. } => *bbox,
         }
     }
 }
