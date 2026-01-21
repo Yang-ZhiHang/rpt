@@ -39,7 +39,7 @@ impl Light {
 }
 
 impl Material for Light {
-    fn illustrate(&self, u: f32, v: f32, p: Point3) -> Color {
+    fn emit(&self, u: f32, v: f32, p: Point3) -> Color {
         self.tex.sample(u, v, p)
     }
 }

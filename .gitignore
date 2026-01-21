@@ -1,6 +1,9 @@
 # Complie
 target
 
+# Configs
+.vscode/launch.json
+
 # Images
 assets
 outputs

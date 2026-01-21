@@ -1,7 +1,14 @@
 use glam::{Mat4, Vec3A, Vec4Swizzles};
+use rand::Rng;
 use std::f32;
 
-use crate::common::random;
+pub fn random() -> f32 {
+    rand::rng().random()
+}
+
+pub fn random_in_range(min: u32, max: u32) -> u32 {
+    min + (rand::rng().random::<f32>() * (max - min) as f32) as u32
+}
 
 pub type Vec3 = Vec3A;
 pub type Point3 = Vec3A;
@@ -10,10 +17,11 @@ pub type Point3 = Vec3A;
 pub mod vec3 {
     use super::*;
     use rand::random_range;
+    use rand_distr::{Distribution, UnitDisc, UnitSphere};
 
     /// Generate a random vector with each component in [0, 1)
     #[inline]
-    pub fn random() -> Vec3 {
+    pub fn random_vec() -> Vec3 {
         Vec3::new(super::random(), super::random(), super::random())
     }
 
@@ -38,21 +46,41 @@ pub mod vec3 {
         }
     }
 
-    /// Randomly generate a vector on the surface of a unit sphere (length == 1.0)
+    /// Randomly generate a vector on the surface of a unit sphere.
     #[inline]
     pub fn random_unit_vector() -> Vec3 {
-        random_in_unit_sphere().normalize()
+        let [x, y, z] = UnitSphere.sample(&mut rand::rng());
+        Vec3::new(x, y, z)
     }
 
-    /// Randomly generate a vector in a unit disk (length <= 1.0, z=0)
+    /// Randomly generate a vector on the surface of a unit hemisphere using uniform probability
+    /// density sampling.
     #[inline]
+    pub fn random_on_hemisphere() -> Vec3 {
+        let r1 = random();
+        let r2 = random();
+        let x = (2.0 * f32::consts::PI * r1).cos() * (r2 * (2.0 - r2)).sqrt();
+        let y = (2.0 * f32::consts::PI * r1).sin() * (r2 * (2.0 - r2)).sqrt();
+        let z = 1.0 - r2;
+        Vec3::new(x, y, z)
+    }
+
+    /// Randomly generate a vector on the surface of a unit hemisphere using cosine weight
+    /// probability density sampling.
+    #[inline]
+    pub fn random_cosine_weight_on_hemisphere() -> Vec3 {
+        let r1 = random();
+        let r2 = random();
+        let x = (2.0 * f32::consts::PI * r1).cos() * r2.sqrt();
+        let y = (2.0 * f32::consts::PI * r1).sin() * r2.sqrt();
+        let z = (1.0 - r2).sqrt();
+        Vec3::new(x, y, z)
+    }
+
+    /// Randomly generate a vector in a unit disk.
     pub fn random_in_unit_disk() -> Vec3 {
-        loop {
-            let p = Vec3::new(random_range(-1.0..1.0), random_range(-1.0..1.0), 0.0);
-            if p.length_squared() < 1.0 {
-                return p;
-            }
-        }
+        let [x, y] = UnitDisc.sample(&mut rand::rng());
+        Vec3::new(x, y, 0.0)
     }
 }
 

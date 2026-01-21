@@ -5,9 +5,9 @@ use rayon::prelude::*;
 use crate::buffer::Buffer;
 use crate::camera::Camera;
 use crate::color::{self, Color};
-use crate::common::random;
 use crate::interval::Interval;
 use crate::math::Ray;
+use crate::math::random;
 use crate::scene::Scene;
 use crate::shape::{HitRecord, Hittable};
 
@@ -89,36 +89,41 @@ impl Renderer {
             return self.scene.background;
         }
 
-        let mut attenuation = Color::default();
-        let mut scatter = Ray::default();
-        let illustrate_color = rec
-            .material
-            .as_ref()
-            .unwrap()
-            .illustrate(rec.u, rec.v, rec.p);
+        let color_from_emission = rec.material.as_ref().unwrap().emit(rec.u, rec.v, rec.p);
 
         // The material could use `unwrap` instead of `map_or` because it will not be `None` if
         // scene.intersect is true.
-        if !rec
-            .material
-            .as_ref()
-            .unwrap()
-            .scatter(ray, rec, &mut attenuation, &mut scatter)
-        {
-            return illustrate_color;
+        if let Some((attenuation, scatter)) = rec.material.as_ref().unwrap().scatter(ray, rec) {
+            let scatter_pdf = rec
+                .material
+                .as_ref()
+                .unwrap()
+                .scatter_pdf(ray, &scatter, rec);
+            let pdf_value = scatter_pdf;
+            let color_from_scatter =
+                attenuation * scatter_pdf * self.trace_ray(&scatter, num_bounces - 1, rec)
+                    / pdf_value;
+
+            color_from_emission + color_from_scatter
+        } else {
+            color_from_emission
         }
-        illustrate_color + attenuation * self.trace_ray(&scatter, num_bounces - 1, rec)
     }
 
     /// Get the pixel color of a specified location in film plane.
     pub fn get_color(&self, col: u32, row: u32, iterations: u32) -> Color {
         let mut pixel_color = Color::default();
         let mut rec = HitRecord::default();
-        for _ in 0..iterations {
-            let u = (col as f32 + random()) / (self.width - 1) as f32;
-            let v = (row as f32 + random()) / (self.height - 1) as f32;
-            let r = self.cam.get_ray(u, v);
-            pixel_color += self.trace_ray(&r, self.max_bounces, &mut rec);
+        // Sampling stratifications + Mento Carlo approximatiom.
+        let iter_sqrt = (iterations as f32).sqrt() as u32;
+        for y in 0..iter_sqrt {
+            for x in 0..iter_sqrt {
+                let s = (col as f32 + (x as f32 + random()) / iter_sqrt as f32) / self.width as f32;
+                let t =
+                    (row as f32 + (y as f32 + random()) / iter_sqrt as f32) / self.height as f32;
+                let r = self.cam.get_ray(s, t);
+                pixel_color += self.trace_ray(&r, self.max_bounces, &mut rec);
+            }
         }
         pixel_color / iterations as f32
     }
@@ -127,7 +132,6 @@ impl Renderer {
     pub fn sample(&self, iterations: u32, buffer: &mut Buffer) {
         let colors: Vec<_> = (0..self.height)
             .into_par_iter()
-            .rev()
             .map(|row| {
                 let row_pixels: Vec<Color> = (0..self.width)
                     .map(|col| self.get_color(col, row, iterations))

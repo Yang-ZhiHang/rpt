@@ -1,9 +1,10 @@
-use std::sync::Arc;
+use std::{f32, sync::Arc};
 
 use crate::{
     color::{self, Color},
     material::Material,
     math::{Ray, vec3::random_unit_vector},
+    shape::HitRecord,
     texture::{Texture, solid_color::SolidColor},
 };
 
@@ -40,15 +41,13 @@ impl Isotropic {
 }
 
 impl Material for Isotropic {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &crate::shape::HitRecord,
-        attenuation: &mut Color,
-        scatter: &mut Ray,
-    ) -> bool {
-        *attenuation = self.tex.sample(rec.u, rec.v, rec.p);
-        *scatter = Ray::new(rec.p, random_unit_vector(), r_in.t);
-        true
+    fn scatter(&self, r_in: &Ray, rec: &crate::shape::HitRecord) -> Option<(Color, Ray)> {
+        let attenuation = self.tex.sample(rec.u, rec.v, rec.p);
+        let scatter = Ray::new(rec.p, random_unit_vector(), r_in.t);
+        Some((attenuation, scatter))
+    }
+    
+    fn scatter_pdf(&self, _r_in: &Ray, _r_out: &Ray, _rec: &HitRecord) -> f32 {
+        1.0 / (4.0 * f32::consts::PI)
     }
 }

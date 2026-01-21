@@ -2,8 +2,8 @@ use std::{f32, sync::Arc};
 
 use crate::{
     aabb::Aabb,
-    common::random,
     interval::Interval,
+    math::random,
     math::{Ray, Vec3},
     shape::{Bounded, HitRecord, Hittable},
 };

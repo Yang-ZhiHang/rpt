@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use crate::{
     color::{self, Color},
-    common::random,
     material::Material,
+    math::random,
     math::{Ray, Vec3},
     shape::HitRecord,
     texture::{Texture, solid_color::SolidColor},
@@ -49,13 +49,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scatter: &mut Ray,
-    ) -> bool {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
         let eta = if rec.front_face {
             1.0 / self.index
         } else {
@@ -76,8 +70,8 @@ impl Material for Dielectric {
                 unit_direction.reflect(rec.normal)
             };
 
-        *attenuation = self.tex.sample(rec.u, rec.v, rec.p);
-        *scatter = Ray::new(rec.p, direction, rec.t);
-        true
+        let attenuation = self.tex.sample(rec.u, rec.v, rec.p);
+        let scatter = Ray::new(rec.p, direction, rec.t);
+        Some((attenuation, scatter))
     }
 }

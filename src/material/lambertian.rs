@@ -1,9 +1,11 @@
+use std::f32;
 use std::sync::Arc;
 
 use crate::color::{self, Color};
 use crate::material::Material;
-use crate::math::vec3::random_unit_vector;
+use crate::math::vec3::random_cosine_weight_on_hemisphere;
 use crate::math::{Ray, Vec3Ext};
+use crate::onb::ONB;
 use crate::shape::HitRecord;
 use crate::texture::Texture;
 use crate::texture::solid_color::SolidColor;
@@ -41,21 +43,21 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scatter: &mut Ray,
-    ) -> bool {
-        let mut scatter_direction = rec.normal + random_unit_vector();
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
+        let uvw = ONB::new(rec.normal);
+        let mut scatter_direction = uvw.transform(random_cosine_weight_on_hemisphere());
 
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
 
-        *attenuation = self.tex.sample(rec.u, rec.v, rec.normal);
-        *scatter = Ray::new(rec.p, scatter_direction, r_in.t);
-        true
+        let attenuation = self.tex.sample(rec.u, rec.v, rec.normal);
+        let scatter = Ray::new(rec.p, scatter_direction, r_in.t);
+        Some((attenuation, scatter))
+    }
+
+    fn scatter_pdf(&self, _r_in: &Ray, r_out: &Ray, rec: &HitRecord) -> f32 {
+        let cos = rec.normal.dot(r_out.dir.normalize());
+        cos / f32::consts::PI
     }
 }

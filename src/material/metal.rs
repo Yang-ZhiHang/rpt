@@ -38,22 +38,20 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &crate::shape::HitRecord,
-        attenuation: &mut Color,
-        scatter: &mut Ray,
-    ) -> bool {
+    fn scatter(&self, r_in: &Ray, rec: &crate::shape::HitRecord) -> Option<(Color, Ray)> {
         let mut reflect_direction: Vec3 = r_in.dir.reflect(rec.normal);
 
         // Normalize the `reflect_direction` or the direction change brought by `fuzz` will be very small.
         reflect_direction = reflect_direction.normalize() + self.fuzz * random_unit_vector();
 
-        *attenuation = self.tex.sample(rec.u, rec.v, rec.p);
-        *scatter = Ray::new(rec.p, reflect_direction, r_in.t);
+        let attenuation = self.tex.sample(rec.u, rec.v, rec.p);
+        let scatter = Ray::new(rec.p, reflect_direction, r_in.t);
 
         // After we add fuzz, we need to ensure the scattered ray is still in outer side of the surface of sphere
-        scatter.dir.dot(rec.normal) > 0.0
+        if scatter.dir.dot(rec.normal) > 0.0 {
+            Some((attenuation, scatter))
+        } else {
+            None
+        }
     }
 }
